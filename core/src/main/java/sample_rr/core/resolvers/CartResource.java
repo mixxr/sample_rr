@@ -7,18 +7,18 @@ package sample_rr.core.resolvers;
 import java.util.HashMap;
 
 import org.apache.sling.api.resource.AbstractResource;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 
 /** A Sling Resource that represents a cart */
 @Adaptable(adaptableClass=Resource.class, adapters={
-    @Adapter({ValueMap.class})
+    @Adapter({ModifiableValueMap.class})
 })
 public class CartResource extends AbstractResource implements Resource {
 
@@ -29,7 +29,7 @@ public class CartResource extends AbstractResource implements Resource {
     
     public static final String RESOURCE_TYPE = "sling/test-services/cart";
     
-    static class CartValueMap extends ValueMapDecorator {
+    static class CartValueMap extends ModifiableValueMapDecorator {
         CartValueMap(String name, double totValue, int nItems) {
             super(new HashMap<String, Object>());
             put("name", name);
@@ -38,14 +38,14 @@ public class CartResource extends AbstractResource implements Resource {
         }
     }
     
-    static class ModifiableCartValueMap extends ModifiableValueMapDecorator {
-    	ModifiableCartValueMap(String name, double totValue, int nItems) {
-            super(new HashMap<String, Object>());
-            put("name", name);
-            put("totValue", totValue);
-            put("nItems", nItems);
-        }
-    }
+//    static class ModifiableCartValueMap extends ModifiableValueMapDecorator {
+//    	ModifiableCartValueMap(String name, double totValue, int nItems) {
+//            super(new HashMap<String, Object>());
+//            put("name", name);
+//            put("totValue", totValue);
+//            put("nItems", nItems);
+//        }
+//    }
     
     CartResource(ResourceResolver resolver, String path, ValueMap valueMap) {
         this.path = path;
@@ -85,9 +85,9 @@ public class CartResource extends AbstractResource implements Resource {
     @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        if(type == ValueMap.class) {
+        //if(type == ModifiableValueMap.class || type == ValueMap.class) {
             return (AdapterType)valueMap;
-        }
-        return super.adaptTo(type);
+        //}
+        //return super.adaptTo(type);
     }
 }

@@ -42,7 +42,6 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
     /** TODO: This can be configurable */
     public static final String NAME = "Carts";
     public static final String ROOT = "/carts";
-    private static int counter = 0;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -64,7 +63,7 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
     public Resource getResource(ResolveContext<Object> ctx, String path, ResourceContext resourceContext,
             Resource parent) {
         
-        logger.info("------------ GET:");
+        logger.info("------------ GET: "+path);
         // Synthetic resource for our root, so that /carts works
         if ((ROOT).equals(path)) {
             return new SyntheticResource(ctx.getResourceResolver(), path, CartResource.RESOURCE_TYPE);
@@ -106,7 +105,7 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
     public Resource create(ResolveContext<Object> ctx, String path, Map<String, Object> props)
             throws PersistenceException {
 
-        final String rName = "Cart" + (new Random(System.currentTimeMillis())).nextInt();
+        final String rName = "Cart" + (new Random(System.currentTimeMillis()+props.hashCode())).nextInt();
         logger.info("------------ CREATE starts:" + path + "/" + rName);
 
         logger.debug("-- Props:" +props.size());
@@ -115,9 +114,12 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
         }
 
         final String newPath = ROOT + "/" + StringUtils.sanitize(rName);
-        final ModifiableValueMap valueMap = new CartResource.ModifiableCartValueMap(rName, 0.00, 0);
-
-        CARTS.put(newPath, valueMap);
+        ValueMap valueMap = CARTS.get(newPath); 
+        if (valueMap == null){
+            logger.debug("-- creating a new cart...");
+            valueMap = new CartResource.CartValueMap(rName, 0.00, 0);
+            CARTS.put(newPath, valueMap);    
+        }
 
         return new CartResource(ctx.getResourceResolver(), newPath, valueMap);
     }
