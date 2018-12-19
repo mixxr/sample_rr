@@ -35,10 +35,21 @@ Or to deploy only the bundle to the author, run
 
 ### GET carts
 
+```
 - curl -u admin:admin http://localhost:4502/carts.-1.json
 - curl -u admin:admin http://localhost:4502/carts/default.2.json
-- 
+```
 
+### POST a cart
+
+```
+ <form action="/carts/*" method="POST">
+      name:<input type="text" name=":name">
+      totValue: <input type="text" name="totValue" value="0.00">
+      nItems: <input type="text" name="nItems" value="0">
+      <input type="submit">
+    </form>
+```
 
 
 

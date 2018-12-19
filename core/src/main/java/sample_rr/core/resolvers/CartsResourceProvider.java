@@ -38,10 +38,13 @@ import sample_rr.core.utils.StringUtils;
 public class CartsResourceProvider extends ResourceProvider<Object> {
 
     private static final Map<String, ValueMap> CARTS = new HashMap<String, ValueMap>();
-
+    private boolean dirtyState = false;
+    
+    
     /** TODO: This can be configurable */
     public static final String NAME = "Carts";
     public static final String ROOT = "/carts";
+    
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -63,7 +66,6 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
     public Resource getResource(ResolveContext<Object> ctx, String path, ResourceContext resourceContext,
             Resource parent) {
         
-        logger.info("------------ GET: "+path);
         // Synthetic resource for our root, so that /carts works
         if ((ROOT).equals(path)) {
             return new SyntheticResource(ctx.getResourceResolver(), path, CartResource.RESOURCE_TYPE);
@@ -71,6 +73,7 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
 
         // Not root, return a Cart if we have one
         final ValueMap data = CARTS.get(path);
+        logger.info("--> GET: "+path+", "+((data!=null)?data.size():0));
         return data == null ? null : new CartResource(ctx.getResourceResolver(), path, data);
     }
 
@@ -79,6 +82,7 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
         if (parent.getPath().startsWith(ROOT)) {
             // TODO: needs to be optimized
             final List<Resource> kids = new ArrayList<Resource>();
+          
             for (Map.Entry<String, ValueMap> e : CARTS.entrySet()) {
                 if (parent.getPath().equals(parentPath(e.getKey()))) {
                     kids.add(new CartResource(parent.getResourceResolver(), e.getKey(), e.getValue()));
@@ -96,8 +100,10 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
     }
 
     private static ValueMap insertDummyCart(String name, double value, int itemsCounter) {
-        final ValueMap valueMap = new CartResource.CartValueMap(name, value, itemsCounter);
-        CARTS.put(ROOT + "/" + StringUtils.sanitize(name), valueMap);
+    	String newPath = ROOT + "/" + StringUtils.sanitize(name);
+    	ValueMap valueMap = new CartResource.CartValueMap(name, value, itemsCounter);
+
+        CARTS.put(newPath, valueMap);
         return valueMap;
     }
 
@@ -105,37 +111,35 @@ public class CartsResourceProvider extends ResourceProvider<Object> {
     public Resource create(ResolveContext<Object> ctx, String path, Map<String, Object> props)
             throws PersistenceException {
 
-        final String rName = "Cart" + (new Random(System.currentTimeMillis()+props.hashCode())).nextInt();
-        logger.info("------------ CREATE starts:" + path + "/" + rName);
+        logger.info("------------ CREATE starts:" + path );
 
-        logger.debug("-- Props:" +props.size());
-        for (Map.Entry<String, Object> entry : props.entrySet()) {
-            logger.debug(entry.getKey() + "=" + entry.getValue());
-        }
-
-        final String newPath = ROOT + "/" + StringUtils.sanitize(rName);
-        ValueMap valueMap = CARTS.get(newPath); 
+        ValueMap valueMap = CARTS.get(path); 
         if (valueMap == null){
-            logger.debug("-- creating a new cart...");
-            valueMap = new CartResource.CartValueMap(rName, 0.00, 0);
-            CARTS.put(newPath, valueMap);    
+        	final String rName = path.split("/")[path.split("/").length-1];
+            logger.debug("-- creating a new cart..."+rName);
+            valueMap = new CartResource.CartValueMap(rName);
+            CARTS.put(path, valueMap);   
+            this.dirtyState = true;
         }
 
-        return new CartResource(ctx.getResourceResolver(), newPath, valueMap);
+        return new CartResource(ctx.getResourceResolver(), path, valueMap);
     }
 
     @Override
     public void commit(ResolveContext<Object> ctx) throws PersistenceException {
-        logger.info("------------ Commit:");
+        logger.info("------------ Commit:"+this.dirtyState);
+        // just to test the commit/revert mechanism
+        this.dirtyState = false;
     }
 
     @Override
     public void revert(ResolveContext<Object> ctx) {
-        logger.info("------------ Revert:");
+        logger.info("------------ Revert:"+this.dirtyState);
+        this.dirtyState = false;
     }
 
     public boolean hasChanges(ResolveContext<Object> ctx) {
-        logger.info("------------ hasChanges:");
-        return true;
+        logger.info("------------ hasChanges:"+this.dirtyState);
+        return this.dirtyState;
     }
 }

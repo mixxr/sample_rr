@@ -32,20 +32,18 @@ public class CartResource extends AbstractResource implements Resource {
     static class CartValueMap extends ModifiableValueMapDecorator {
         CartValueMap(String name, double totValue, int nItems) {
             super(new HashMap<String, Object>());
-            put("name", name);
+            //put("name", name);
             put("totValue", totValue);
             put("nItems", nItems);
+            put("jcr:primaryType", "nt:unstructured");
+        }
+        CartValueMap(String name) {
+            super(new HashMap<String, Object>());
+            //put("name", name);
+            put("jcr:primaryType", "nt:unstructured");
         }
     }
-    
-//    static class ModifiableCartValueMap extends ModifiableValueMapDecorator {
-//    	ModifiableCartValueMap(String name, double totValue, int nItems) {
-//            super(new HashMap<String, Object>());
-//            put("name", name);
-//            put("totValue", totValue);
-//            put("nItems", nItems);
-//        }
-//    }
+   
     
     CartResource(ResourceResolver resolver, String path, ValueMap valueMap) {
         this.path = path;
@@ -85,9 +83,9 @@ public class CartResource extends AbstractResource implements Resource {
     @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        //if(type == ModifiableValueMap.class || type == ValueMap.class) {
+        if(type == ModifiableValueMap.class || type == ValueMap.class) {
             return (AdapterType)valueMap;
-        //}
-        //return super.adaptTo(type);
+        }
+        return super.adaptTo(type);
     }
 }
